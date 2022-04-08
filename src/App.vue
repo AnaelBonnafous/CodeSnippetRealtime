@@ -1,6 +1,7 @@
 <template>
   <div>
     <div id="navbar">
+      <LoginForm @login="setupEditors()" @logout="destroyEditors()" />
       <h1>CodeSnippet Realtime</h1>
       <button
         v-for="(_, key) in projects"
@@ -33,47 +34,78 @@
 <script>
 import * as monaco from "monaco-editor";
 import { fromMonaco } from "@sagarjain0907/firepad";
-import { db } from "@/plugins/firebase";
+import { auth, db } from "@/plugins/firebase";
 import { ref, get, push, child } from "firebase/database";
+import LoginForm from "@/components/LoginForm.vue";
 
 export default {
   name: "App",
+  components: {
+    LoginForm,
+  },
   data: () => ({
     projects: {},
+    htmlEditor: null,
+    cssEditor: null,
+    jsEditor: null,
   }),
   mounted() {
-    get(ref(db, "projets")).then((s) => (this.projects = s.val()));
-
-    const { html, css, js } = this.getCodes();
-
-    fromMonaco(
-      html,
-      monaco.editor.create(document.querySelector("#html-tab .editor"), {
-        value: "<h1>Mon projet CodeSnippet</h1>",
-        language: "html",
-        theme: "vs-dark",
-      })
-    );
-
-    fromMonaco(
-      css,
-      monaco.editor.create(document.querySelector("#css-tab .editor"), {
-        value: `h1 {\ncolor: #F00;\n}`,
-        language: "css",
-        theme: "vs-dark",
-      })
-    );
-
-    fromMonaco(
-      js,
-      monaco.editor.create(document.querySelector("#js-tab .editor"), {
-        value: "console.log('Bonjour tout le monde !')",
-        language: "typescript",
-        theme: "vs-dark",
-      })
-    );
+    if (auth.currentUser) this.setupEditors();
   },
   methods: {
+    setupEditors() {
+      get(ref(db, "projets")).then((s) => (this.projects = s.val()));
+
+      const { html, css, js } = this.getCodes();
+
+      this.htmlEditor = fromMonaco(
+        html,
+        monaco.editor.create(document.querySelector("#html-tab .editor"), {
+          value: "<h1>Mon projet CodeSnippet</h1>",
+          language: "html",
+          theme: "vs-dark",
+        }),
+        {
+          userId: auth.currentUser.uid,
+          userName: auth.currentUser.displayName,
+          userColor: auth.currentUser.photoURL,
+        }
+      );
+
+      this.cssEditor = fromMonaco(
+        css,
+        monaco.editor.create(document.querySelector("#css-tab .editor"), {
+          value: `h1 {\ncolor: #F00;\n}`,
+          language: "css",
+          theme: "vs-dark",
+        }),
+        {
+          userId: auth.currentUser.uid,
+          userName: auth.currentUser.displayName,
+          userColor: auth.currentUser.photoURL,
+        }
+      );
+
+      this.jsEditor = fromMonaco(
+        js,
+        monaco.editor.create(document.querySelector("#js-tab .editor"), {
+          value: "console.log('Bonjour tout le monde !')",
+          language: "typescript",
+          theme: "vs-dark",
+        }),
+        {
+          userId: auth.currentUser.uid,
+          userName: auth.currentUser.displayName,
+          userColor: auth.currentUser.photoURL,
+        }
+      );
+    },
+    destroyEditors() {
+      this.htmlEditor.dispose();
+      this.cssEditor.dispose();
+      this.jsEditor.dispose();
+      this.goTo("/");
+    },
     getCodes() {
       const projectId = window.location.hash.replace(/#/g, "");
 
