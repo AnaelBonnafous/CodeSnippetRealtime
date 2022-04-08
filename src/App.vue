@@ -101,8 +101,16 @@ export default {
       return { html, css, js };
     },
     goTo(url) {
-      location.replace(url);
-      location.reload();
+      if (url === "/") {
+        history.pushState(
+          "",
+          document.title,
+          window.location.pathname + window.location.search
+        );
+      } else {
+        window.location.replace(url);
+      }
+      window.location.reload();
     },
   },
 };
