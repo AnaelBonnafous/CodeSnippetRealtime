@@ -33,7 +33,8 @@
 <script>
 import * as monaco from "monaco-editor";
 import { fromMonaco } from "@sagarjain0907/firepad";
-import { firebaseApp } from "@/plugins/firebase";
+import { db } from "@/plugins/firebase";
+import { ref, get, push, child } from "firebase/database";
 
 export default {
   name: "App",
@@ -41,12 +42,7 @@ export default {
     projects: {},
   }),
   mounted() {
-    firebaseApp
-      .database()
-      .ref()
-      .child("projets")
-      .get()
-      .then((snapshot) => (this.snippets = snapshot.val()));
+    get(ref(db, "projets")).then((s) => (this.projects = s.val()));
 
     const { html, css, js } = this.getCodes();
 
@@ -79,26 +75,21 @@ export default {
   },
   methods: {
     getCodes() {
-      let html,
-        css,
-        js = "";
+      const projectId = window.location.hash.replace(/#/g, "");
 
-      let ref = firebaseApp.database().ref("projets");
-      const hash = window.location.hash.replace(/#/g, "");
+      const projectsRef = ref(db, "projets");
 
-      if (hash) {
-        html = ref.child(hash).child("html");
-        css = ref.child(hash).child("css");
-        js = ref.child(hash).child("js");
-      } else {
-        ref = ref.push();
-        html = ref.child("html");
-        css = ref.child("css");
-        js = ref.child("js");
-        window.location = window.location + "#" + ref.key;
-      }
+      const projectRef = projectId
+        ? child(projectsRef, projectId)
+        : push(projectsRef);
 
-      return { html, css, js };
+      if (!projectId) window.location += "#" + projectRef.key;
+
+      return {
+        html: child(projectRef, "html"),
+        css: child(projectRef, "css"),
+        js: child(projectRef, "js"),
+      };
     },
     goTo(url) {
       if (url === "/") {
