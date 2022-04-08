@@ -3,7 +3,7 @@
     <div id="navbar">
       <h1>CodeSnippet Realtime</h1>
       <button
-        v-for="(_, key) in snippets"
+        v-for="(_, key) in projects"
         :key="key"
         @click="goTo('/#' + key)"
         class="btn"
@@ -38,7 +38,7 @@ import { firebaseApp } from "@/plugins/firebase";
 export default {
   name: "App",
   data: () => ({
-    snippets: {},
+    projects: {},
   }),
   mounted() {
     firebaseApp
