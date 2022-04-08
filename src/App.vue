@@ -28,6 +28,13 @@
         <div class="editor"></div>
       </div>
     </div>
+    <div id="result">
+      <h2>Résultat</h2>
+      <iframe
+        :srcdoc="`<html><body>${htmlCode}<style>${cssCode}</style><script>${jsCode}</script></body></html>`"
+        frameborder="0"
+      ></iframe>
+    </div>
   </div>
 </template>
 
@@ -49,6 +56,20 @@ export default {
     cssEditor: null,
     jsEditor: null,
   }),
+  computed: {
+    htmlCode() {
+      if (!this.htmlEditor?._ready) return "";
+      return this.htmlEditor.getText();
+    },
+    cssCode() {
+      if (!this.cssEditor?._ready) return "";
+      return this.cssEditor.getText();
+    },
+    jsCode() {
+      if (!this.jsEditor?._ready) return "";
+      return this.jsEditor.getText();
+    },
+  },
   mounted() {
     if (auth.currentUser) this.setupEditors();
   },
@@ -169,11 +190,11 @@ export default {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: 20px;
-  margin: 0 100px;
+  margin: 0 20px;
 }
 
 #grid .editor {
-  min-height: 500px;
+  min-height: 300px;
 }
 
 #html-tab {
@@ -186,5 +207,14 @@ export default {
 
 #js-tab {
   color: #ffc845;
+}
+
+#result {
+  margin: 20px;
+}
+
+#result iframe {
+  width: 100%;
+  border: 2px solid #000;
 }
 </style>
